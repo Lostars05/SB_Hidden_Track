@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hidden Track | For STAGE BURN</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #0f0f1a; /* 포스터 배경색 */
+      font-family: 'Orbitron', sans-serif;
+      color: white;
+      overflow-x: hidden;
+    }
+
+    header {
+      position: relative;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .menu-button {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      font-size: 1rem;
+      background: none;
+      border: 1px solid white;
+      color: white;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+
+    .image1 {
+      max-width: 230px;
+      height: auto;
+      position: relative;
+      top: 30px;
+      left: -50px;
+    transform: rotate(-5deg);
+    }
+
+    .image2 {
+      max-width: 250px;
+      height: auto;
+      position: relative;
+      top: -10px;
+      left: 30px;
+    transform: rotate(5deg);
+    }
+
+    .logo-img {
+      max-width: 50px;
+      height: auto;
+      position: relative;
+      top: -330px;
+      left: 0px;
+    }
+
+    .info {
+      margin-top: 30px;
+      font-size: 1rem;
+      opacity: 0.8;
+    }
+
+    
+
+    /* 슬라이드 메뉴 기본 스타일 */
+#slide-menu {
+  position: fixed;
+  top: 0;
+  right: -300px; /* 처음엔 화면 밖에 숨김 */
+  width: 250px;
+  height: 100%;
+  background-color: rgba(15, 15, 26, 0.95); /* 반투명 배경 */
+  color: white;
+  padding: 60px 20px;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.5);
+  transition: right 0.4s ease;
+  z-index: 999;
+}
+
+#slide-menu ul {
+  list-style: none;
+  padding: 0;
+}
+
+#slide-menu li {
+  margin-bottom: 20px;
+}
+
+#slide-menu a, #slide-menu span {
+  color: white;
+  text-decoration: none;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+#slide-menu .has-submenu ul {
+  display: none;
+  margin-top: 10px;
+  padding-left: 15px;
+  font-size: 0.95rem;
+}
+
+/* 메뉴 열릴 때 클래스 */
+#slide-menu.open {
+  right: 0;
+}
+
+/* ✅ 모바일 전용 스타일 */
+  @media screen and (max-width: 768px) {
+    .menu-button {
+      font-size: 0.9rem;
+      padding: 6px 10px;
+      right: 20px;
+    }
+
+    #slide-menu {
+      width: 200px;
+      padding: 40px 15px;
+    }
+
+    .hero-text img {
+      max-width: 90%;
+    }
+
+    .lp-image {
+      max-width: 200px;
+    }
+
+    .text1 {
+      font-size: 2rem;
+    }
+    .text2 {
+      font-size: 1rem;
+    }
+    .text3 {
+      font-size: 0.8rem;
+    }
+
+    /* 텍스트 이미지 위치 조정 */
+    .hero-text img:last-child {
+      left: 40px !important;
+      max-width: 60% !important;
+    }
+  }
+.close-button {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.section {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 2.5s ease, transform 2.5s ease;
+}
+
+.section.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+    
+  </style>
+</head>
+<body>
+  <header>
+    <!-- 메뉴 버튼 -->
+<button class="menu-button" onclick="toggleMenu()">☰</button>
+
+<!-- 슬라이드 메뉴 -->
+<div id="slide-menu">
+<!-- 닫기 버튼 -->
+<button class="close-button" onclick="toggleMenu()">✕</button>
+    <ul>
+    <li><a href="about_SB.html">동아리 소개</a></li>
+    <li><a href="intro.html">공연 소개</a></li>
+    <li><a href="audio_track.html">플레이리스트</a></li>
+  </ul>
+</div>
+
+
+      <!-- 단체 이미지 삽입 -->
+        <img src="image_file/img1.JPG" alt="단체사진1" class="section image1" />
+        <img src="image_file/img2.jpg" alt="단체사진2" class="section image2" />
+
+    <!-- 메인 화면 이동 로고 이미지 -->
+       <a id="photo-link" href="index.html">
+            <img src="image_file/SB_logo.png" alt="로고 사진" class="logo-img">
+        </a>
+    <!-- 날짜 및 장소 정보 -->
+    <div class="section text1">STAGE BURN</div>
+    <div class="section text2">한경국립대학교 유일 힙합 동아리</div>
+    <br><br><br>
+    <div class="section text3">HipHop 및 R&B 곡을 커버하고, 창작하며<br>
+        다양한 음악 활동을 하고 있습니다.<br>
+        '자체 제작 동아리'라는 타이틀을 가지고<br>
+        비트 메이킹, 녹음, 믹싱을 통해 음악을 제작하는 활동을 합니다.</div>
+
+  </header>
+
+<script>
+  function toggleMenu() {
+    const menu = document.getElementById("slide-menu");
+    menu.classList.toggle("open");
+  }
+
+  function toggleSubMenu() {
+    const submenu = document.getElementById("sub-menu");
+    submenu.style.display = submenu.style.display === "block" ? "none" : "block";
+  }
+
+
+
+  // 스크롤 시 섹션이 화면에 들어올 때 페이드 인 애니메이션
+    document.addEventListener("DOMContentLoaded", () => {
+      const sections = document.querySelectorAll(".section");
+
+      if ("IntersectionObserver" in window) {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("in-view");
+                // 한 번 보인 섹션은 더 이상 관찰하지 않음
+                observer.unobserve(entry.target);
+              }
+            });
+          },
+          {
+            threshold: 0.2,
+          }
+        );
+
+        sections.forEach((sec) => observer.observe(sec));
+      } else {
+        // 오래된 브라우저용: 그냥 즉시 보이게
+        sections.forEach((sec) => sec.classList.add("in-view"));
+      }
+    });
+</script>
+</body>
+</html>

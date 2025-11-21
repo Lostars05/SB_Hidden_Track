@@ -1,0 +1,740 @@
+  <!doctype html>
+  <html lang="ko">
+  <head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover" />
+  <title>3D Vinyl Player — Audio Enabled</title>
+  <style>
+        header {
+        position: relative;
+        height: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+
+      .menu-button {
+        position: absolute;
+        top: 20px;
+        right: 30px;
+        font-size: 1rem;
+        background: none;
+        border: 1px solid white;
+        color: white;
+        padding: 8px 12px;
+        cursor: pointer;
+      }
+  /* 슬라이드 메뉴 기본 스타일 */
+  #slide-menu {
+    position: fixed;
+    top: 0;
+    right: -300px; /* 처음엔 화면 밖에 숨김 */
+    width: 250px;
+    height: 100%;
+    background-color: rgba(15, 15, 26, 0.95); /* 반투명 배경 */
+    color: white;
+    padding: 60px 20px;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.5);
+    transition: right 0.4s ease;
+    z-index: 999;
+  }
+
+  #slide-menu ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  #slide-menu li {
+    margin-bottom: 20px;
+  }
+
+  #slide-menu a, #slide-menu span {
+    color: white;
+    text-decoration: none;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+
+  #slide-menu .has-submenu ul {
+    display: none;
+    margin-top: 10px;
+    padding-left: 15px;
+    font-size: 0.95rem;
+  }
+
+  /* 메뉴 열릴 때 클래스 */
+  #slide-menu.open {
+    right: 0;
+  }
+
+  /* ✅ 모바일 전용 스타일 */
+    @media screen and (max-width: 768px) {
+      .menu-button {
+        font-size: 0.9rem;
+        padding: 6px 10px;
+        right: 20px;
+      }
+
+      #slide-menu {
+        width: 200px;
+        padding: 40px 15px;
+      }
+    }
+    .close-button {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+
+    :root{
+      --bg:#0f0f11;
+      --card:#1f1f23;
+      --muted:#bdbdbd; /* cite: 63 */
+      --accent1:#e07a3b;
+      --accent2:#3bb0e0;
+    } /* cite: 64 */
+    html,body{height:100%;margin:0;background:var(--bg);color:#fff;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans KR",Arial}
+    .wrap{min-height:100%;display:flex;flex-direction:column;align-items:center;padding:36px 16px 80px 16px;box-sizing:border-box}
+
+    /* 플레이어 박스 */
+    .player{
+      width:84vw;
+      max-width:380px; aspect-ratio:1/1; /* cite: 65 */
+      min-height: 400px;
+      background:linear-gradient(180deg,#25252a,#17171a);
+      border-radius:14px; display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:10px; box-shadow:0 12px 40px rgba(0,0,0,0.6); text-align:center;
+      user-select:none; /* cite: 66 */
+      position:relative; overflow: hidden;
+    } 
+
+    /* ⭐ 가사가 보일 때 플레이어 상태 */
+    .player.show-lyrics{
+      aspect-ratio: unset;
+      height: auto; /* cite: 67 */
+      padding-bottom: 24px;
+    }
+
+    .title{font-size:1.05rem;font-weight:700;color:#fff;letter-spacing:0.2px}
+    .artist{font-size:.88rem;color:var(--muted)}
+    
+    /* ⭐ .meta-row 수정: 중앙 정렬 추가 */
+    .meta-row{
+      display:flex;
+      gap:12px;
+      align-items:center; 
+      width: 80%;
+      justify-content: center; /* ⭐ 중앙 정렬 */
+    }
+    .play-btn{width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;cursor:pointer}
+    .play-btn svg{width:22px;height:22px;fill:#fff;opacity:.95}
+
+    /* ⭐ 가사 보기 버튼 스타일 */
+    .lyrics-btn{
+      padding: 0 14px;
+      height: 46px; /* cite: 69 */
+      border-radius: 9999px;
+      background: rgba(255,255,255,0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: .88rem;
+      font-weight: 500;
+      color: var(--muted);
+      transition: background 180ms, color 180ms; /* cite: 70 */
+    }
+    .lyrics-btn:hover{
+      background: rgba(255,255,255,0.1); /* cite: 71 */
+    }
+    .lyrics-btn.active {
+      background: var(--accent1);
+      color: #fff; /* cite: 72 */
+    }
+
+    /* ⭐ 가사 컨테이너 스타일 (중앙 정렬 및 스크롤 디자인 적용) */
+    .lyrics-container{
+      width: 100%;
+      height: 0; /* cite: 73 */
+      opacity: 0;
+      overflow-y: auto;
+      margin-top: 20px;
+      padding: 0 20px;
+      box-sizing: border-box;
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.6;
+      text-align: center; /* 중앙 정렬 cite: 74 */
+      transition: height 300ms ease-out, opacity 300ms ease-out; /* cite: 75 */
+      /* Firefox용 스크롤바 스타일 */
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.1) transparent; /* cite: 76 */
+    }
+    .player.show-lyrics .lyrics-container{
+      height: 150px; 
+      opacity: 1; /* cite: 77 */
+    }
+    .lyrics-container p {
+      margin: 0;
+      white-space: pre-wrap;
+      display: inline-block; /* 중앙 정렬 유지 cite: 78 */
+    }
+
+    /* ⭐ 웹킷 기반 브라우저 (Chrome, Safari) 스크롤바 스타일링 */
+    .lyrics-container::-webkit-scrollbar {
+      width: 6px; /* 스크롤바 너비 cite: 79 */
+    }
+    .lyrics-container::-webkit-scrollbar-thumb {
+      background-color: rgba(255, 255, 255, 0.15); /* 스크롤 핸들 색상 cite: 80 */
+      border-radius: 10px;
+    }
+    .lyrics-container::-webkit-scrollbar-track {
+      background: transparent; /* 트랙 배경 투명 cite: 81 */
+    }
+
+    /* 반원 레코드 래퍼 */
+    .record-wrapper{
+      width:min(360px,84vw);
+      margin-top:-36px; /* cite: 82 */
+      display:flex;justify-content:center;align-items:flex-start;
+      perspective:1000px;
+    }
+
+    /* 반원 클리핑 영역 */
+    .half-clip{
+      --diameter: min(360px,84vw);
+      width:var(--diameter); /* cite: 83 */
+      height:calc(var(--diameter) / 2); /* cite: 83 */
+      overflow:hidden;
+      border-top-left-radius:9999px;
+      border-top-right-radius:9999px;
+      position:relative;
+      touch-action:none; /* cite: 84 */
+    }
+
+    .record-3d{
+      width:var(--diameter);
+      height:var(--diameter);
+      position:absolute;
+      left:0;
+      top:0;
+      transform-style:preserve-3d;
+      will-change:transform; /* cite: 85 */
+      transition: transform 120ms linear; /* cite: 86 */
+    }
+
+    /* 실제 레코드 */
+    .vinyl{
+      width:100%;
+      height:100%;
+      border-radius:50%;
+      overflow:hidden;
+      box-shadow:0 12px 30px rgba(0,0,0,0.5), inset 0 -6px 30px rgba(0,0,0,0.35); /* cite: 87 */
+      transform-style:preserve-3d;
+      backface-visibility:hidden;
+      position:relative;
+      background:#000;
+      will-change: transform; /* cite: 88 */
+    }
+    .vinyl img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;-webkit-user-drag:none}
+
+    /* 레이블 버튼 */
+.label {
+  position: absolute;              /* 부모 요소 기준으로 절대 위치 지정 */
+  width: 20%;                      /* 요소의 너비를 부모의 22%로 설정 */
+  height: 11%;                     /* 요소의 높이를 부모의 22%로 설정 */
+  border-radius: 50%;              /* 원형 모양을 만들기 위해 반지름을 50%로 설정 */
+  top: 82%;                        /* 부모 요소의 위쪽에서 40% 위치 */
+  left: 48%;                       /* 부모 요소의 왼쪽에서 50% 위치 */
+  transform: translate(-50%, -50%);/* 요소를 정확히 중앙에 배치 (X,Y축 -50% 이동) */
+  
+  display: flex;                   /* 내부 콘텐츠를 flexbox로 배치 */
+  align-items: center;             /* 세로 방향 중앙 정렬 */
+  justify-content: center;         /* 가로 방향 중앙 정렬 */
+  
+  color: #fff;                     /* 글자 색상을 흰색으로 설정 */
+  font-weight: 700;                /* 글자 두께를 굵게 설정 */
+  font-size: 0.95rem;              /* 글자 크기를 0.95rem으로 설정 */
+  
+  cursor: pointer;                 /* 마우스 올리면 커서가 손 모양으로 변경 */
+  box-shadow: 0 6px 18px rgba(0,0,0,0.5); /* 그림자 효과 (X=0, Y=6px, Blur=18px, 반투명 검정) */
+  
+  z-index: 20;                     /* 다른 요소보다 위에 표시되도록 레이어 우선순위 설정 */
+  user-select: none;               /* 텍스트 드래그 불가능하게 설정 */
+  
+  transition: 
+    transform 280ms cubic-bezier(.2,.9,.2,1), /* 변형 애니메이션 (부드러운 곡선) */
+    background 280ms;              /* 배경색 변경 시 애니메이션 적용 */
+  
+  backface-visibility: hidden;     /* 3D 변환 시 뒷면이 보이지 않도록 설정 */
+}
+    .label .front, .label .back{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:50%;backface-visibility:hidden}
+    .label .back{transform:rotateY(180deg)}
+
+    .vinyl::after{
+      content:"";
+      position:absolute;left:0;top:0;right:0;bottom:0;border-radius:50%; /* cite: 91 */
+      background:radial-gradient(circle at 30% 20%, rgba(255,255,255,0.03), transparent 12%), linear-gradient(180deg, rgba(255,255,255,0.02), transparent 30%); /* cite: 91 */
+      pointer-events:none;mix-blend-mode:screen; /* cite: 92 */
+    }
+
+    .hint{margin-top:18px;color:var(--muted);font-size:.85rem}
+    .index-badge{position:fixed;right:14px;bottom:18px;background:rgba(255,255,255,0.04);padding:8px 10px;border-radius:10px;color:var(--muted);font-size:.85rem}
+
+    .label-flip{position:absolute;inset:0;transform-style:preserve-3d;transition: transform 520ms cubic-bezier(.2,.9,.2,1)}
+    .part1 .label { background: var(--accent1); /* cite: 93 */
+    }
+    .part2 .label { background: var(--accent2); /* cite: 94 */
+    }
+
+    .record-shadow{position:absolute;left:50%;transform:translateX(-50%);bottom:-8%;width:calc(var(--diameter) * 0.95);height:18px;border-radius:50%;filter:blur(12px);opacity:0.6;background:linear-gradient(90deg, rgba(0,0,0,0.6), rgba(0,0,0,0.4));pointer-events:none}
+
+    .logo-img {
+        max-width: 50px;
+        height: auto;
+        position: relative;
+        top: 22px;
+        left: 0px;
+      }
+
+      .progress-container {
+  width: 80%;
+  margin-top: 12px;
+  text-align: center;
+}
+
+#progressBar {
+  width: 100%;
+  appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.2);
+  cursor: pointer;
+}
+
+#progressBar::-webkit-slider-thumb {
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent1);
+  cursor: pointer;
+}
+
+.time-display {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+  </style>
+  </head>
+    <header>
+      <!-- 메뉴 버튼 -->
+  <button class="menu-button" onclick="toggleMenu()">☰</button>
+
+  <!-- 슬라이드 메뉴 -->
+  <div id="slide-menu">
+  <!-- 닫기 버튼 -->
+  <button class="close-button" onclick="toggleMenu()">✕</button>
+      <ul>
+      <li><a href="about_SB.html">동아리 소개</a></li>
+      <li><a href="intro.html">공연 소개</a></li>
+      <li><a href="audio_track.html">플레이리스트</a></li>
+    </ul>
+  </div>
+      <!-- 메인 화면 이동 로고 이미지 -->
+        <a id="photo-link" href="index.html">
+              <img src="image_file/SB_logo.png" alt="로고 사진" class="logo-img">
+          </a>
+    </header>
+  <body>
+  <div class="wrap">
+    <div class="player" id="playerBox">
+      <div class="title" id="title">Track 1</div>
+      <div class="artist" id="artist">Artist A</div>
+      <!-- 재생바 + 시간 표시 -->
+  <div class="progress-container">
+    <input type="range" id="progressBar" value="0" min="0" max="100" step="1">
+    <div class="time-display">
+      <span id="currentTime">0:00</span> / <span id="duration">0:00</span>
+    </div>
+  </div>
+
+
+      <div class="meta-row">
+        <div class="play-btn" id="playBtn" title="Play/Pause">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </div>
+        <div class="lyrics-btn" id="lyricsBtn" role="button">가사</div>
+        </div>
+
+      <div class="lyrics-container" id="lyricsContainer" aria-hidden="true">
+          <p id="lyricsContent">가사 내용이 여기에 표시됩니다.</p> </div>
+    </div>
+
+    <div class="label" id="labelBtn" role="button" aria-pressed="false">
+        <div class="label-flip" id="labelFlip">
+           <div class="front">1부</div>
+           <div class="back">2부</div> </div> </div>
+
+    <div class="record-wrapper">
+      <div 
+      class="half-clip" id="halfClip" aria-hidden="false"> <div class="record-3d part1" id="record3d">
+          <div class="vinyl" id="vinyl">
+            <img id="recordImg" src="image_file/CD_img.png" alt="record image" />
+          </div>
+
+        </div>
+      </div>
+      <div class="record-shadow" id="recordShadow"></div>
+    </div>
+
+    <div class="hint" id="hint">레코드를 좌우로 드래그해 회전하세요.
+    중앙 라벨을 탭하면 1부/2부 전환됩니다.</div> <div class="index-badge" id="idxBadge">1 / 5</div>
+  </div>
+
+  <script>
+      function toggleMenu() {
+      const menu = document.getElementById("slide-menu");
+      menu.classList.toggle("open");
+    }
+
+    function toggleSubMenu() {
+      const submenu = document.getElementById("sub-menu");
+      submenu.style.display = submenu.style.display === "block" ? "none" : "block";
+    }
+  /* ------------------------------
+    트랙 데이터 (파트 1, 파트 2) - 가사 포함
+  ------------------------------ */
+  const FULL_LYRICS = "크게 한판 했네 또 yeah\n마음은 착한 아이라며 bullshit\n다시 만난다 할 때부터\n왠지 느낌이 쎄하긴 했어\nListen 다투는 거 까진 okay\n문제는 지금이 몇 시 게\n메시지 확인해서 뭐해\n걘 백프로 게임 중일 텐데\nSomething is wrong\n여기 있는 너도 책임이 커\n얘기 안 끝났어 앉아\nActually 이젠 정말 헤어졌으면 좋겠어\n잠깐 말고 정식으로 한 쪽만 손해 본 걸\nHonestly 애초에 네가\n천만 배는 아까워\n거짓말 좀 보탰어\n암튼간 걘 아니야\n휘둘리고 있네 또\n꼭 집고 넘어간다며 foolish\n넌 어물쩍 화해해 버리곤\n항상 코앞에서 포인트를 놓쳐\nYo 기념일 건너뛰고\n지 술 모임엔 꼬박꼬박 출석하지\n과한 style 질색하는 \n넌 데\n로고 박힌 명품 주는 건 무슨 깡인지\nSoundCloud에 추가된 트랙들\n구독 중인 YouTube 채널만 봐도\n이 조합은 오래 못 가\nActually 이젠 정말 헤어졌으면 좋겠어\n잠깐 말고 정식으로 한 쪽만 손해 본 걸\nHonestly 애초에 네가\n천만 배는 아까워\n거짓말 좀 보탰어\n암튼간 걘 아니야\n암튼간 걘 아니야\n암튼간 걘 아니야\nwoo, woo, woo, woo, woo\nStop hesitating you choose\n환승할 때야 슬슬\n멀리 가서 찾지 마 굳이\n등잔 밑에 누가 있는지 확인해 어서 yo\n자꾸 산통 깨서 미안한데 (sorry)\n사실 좀 고마워 녀석한테\n말 나온 김에 그냥 고할게\nYou're the one, you're the one\nYou're the one that I want\nActually 애초에 너랑\n친구 먹기 싫었어\n못 들은 척 넘기지마\n좋아한단 말이야\n암튼간 걘 아니야\n암튼간 걘 아니야\nwoo, woo, woo, woo, woo"; /* cite: 98 */
+
+  const PARTS = {
+    1: [
+      { title: "P1 - Track 1", artist: "Artist A", audioSrc: "audio/track1.mp3", lyrics: FULL_LYRICS }, /* cite: 99 */
+      { title: "P1 - Track 2", artist: "Artist A", audioSrc: "audio/track2.mp3", lyrics: "오늘 밤이 만약 내게 주어진\n돛대와 같다면 what should i do with this?\nmmmm maybe\n지나온 나날들을 시원하게 훑겠지\n스물 여섯 컷의 흑백 film\n내 머릿속의 스케치\n원하든 말든 메모리들이\n비 오듯 쏟아지겠지\n엄마의 피에 젖어 태어나고 내가 처음 배웠던 언어\n부터 낯선 나라 위에 떨어져 별 다른 노력 없이 배웠던 영어\n나의 아버지에 대한 혐오와 나의 새 아버지에 대한 나의 존경\n갑자기 떠오른 표현 life's like 오렌지색의 터널\nIf I die tomorrow\nIf I die tomorrow\nIf I die tomorrow\nIf I die tomorrow\nIf I die tomorrow\nIf I die tomorrow\nIf I die tomorrow\nIf I die die die\n고개를 45도 기울여\n담배 연기와 함께 품은 기억력\n추억을 소리처럼 키우면\n눈을 감아도 보오이는 theater\n시간은 유연하게 휘어져\n과거로 스프링처럼 이어져\n아주 작고 작았던 미니어쳐\n시절을 떠올리는 건 껌처럼 쉬워져\n빨주노초 물감을 덜어 하얀색 종이 위를 총처럼 겨눴던\n어린 화가의 경력은 뜬금없게도 힙합에 눈이 멀어\n멈춰버렸지만 전혀 두렵지 않았어 cuz I didn't give a fuck\nabout 남의 시선 cuz life is like 나 홀로 걸어가는 터널\nIf I die tomorrow\nIf I die tomorrow\nIf I die tomorrow\nIf I die tomorrow\nIf I die tomorrow\nIf I die tomorrow\nIf I die tomorrow\nIf I die die die\n내게도 마지막 호흡이 주어지겠지\n마라톤이 끝나면 끈이 끊어지듯이\n당연시 여겼던 아침 아홉 시의 해와\n음악에 몰두하던 밤들로부터 fade out\n말보로와 함께 탄 내 20대의 생활\n내 생에 마지막 여자와의 애정의 행각\n책상 위에 놓인 1800원 짜리 펜과\n내가 세상에 내놓은 내 노래가 가진 색깔\n까지 모두 다 다시는 못 볼 것 같아\n삶이란 게 좀 지겹긴 해도 좋은 건가 봐\n엄마 don't worry bout me ma\n엄마 입장에서 아들의 죽음은 도둑 같겠지만\nI'll be always in your heart 영원히\nI'll be always in your heart 할머니\nyou don't have to miss me 난 이 노래 안에 있으니까\n나의 목소리를 잊지마\nIf I die tomorrow\nIf I die tomorrow\nIf I die tomorrow\nIf I die tomorrow\nIf I die tomorrow\nIf I die tomorrow\nIf I die tomorrow\nIf I die die die" }, /* cite: 99, 100, 101, 102 */
+      { title: "P1 - Track 3", artist: "Artist A", audioSrc: "audio/p1_track3.mp3", lyrics: "P1 - Track 3 가사.\n노래는 계속됩니다." }, /* cite: 103 */
+      { title: "P1 - Track 4", artist: "Artist A", audioSrc: "audio/p1_track4.mp3", lyrics: "P1 - Track 4 가사.\n드래그해서 트랙을 넘겨보세요." }, /* cite: 104 */
+      { title: "P1 - Track 5", artist: 
+      "Artist A", audioSrc: "audio/p1_track5.mp3", lyrics: "마지막 트랙의 가사입니다.\n끝은 또 다른 시작을 알리죠." }, /* cite: 105 */
+      { title: "P1 - Track 6", artist: "Artist A", audioSrc: "audio/p1_track6.mp3", lyrics: "P1 - Track 6 가사." }
+    ],
+    2: [
+      { title: "P2 - Track 1", artist: "Artist B", audioSrc: "audio/p2_track1.mp3", lyrics: FULL_LYRICS },
+      { title: "P2 - Track 2", artist: "Artist B", audioSrc: "audio/p2_track2.mp3", lyrics: "새로운 시작, P2-T2 가사입니다." }, /* cite: 106 */
+      { title: "P2 - Track 3", artist: "Artist B", audioSrc: "audio/p2_track3.mp3", lyrics: "P2 - Track 3 가사.\n파트 전환을 해보세요." }, /* cite: 107 */
+      { title: "P2 - Track 4", artist: "Artist B", audioSrc: "audio/p2_track4.mp3", lyrics: "P2 - Track 4 가사.\n이 레코드는 3D입니다." }, /* cite: 108 */
+      { title: "P2 - Track 5", artist: "Artist B", audioSrc: "audio/p2_track5.mp3", lyrics: "파트 2의 마지막 트랙 가사입니다." } /* cite: 109 */
+    ]
+  };
+  /* ------------------------------
+    DOM 요소 참조
+  ------------------------------ */
+  const titleEl = document.getElementById('title');
+  const artistEl = document.getElementById('artist'); /* cite: 110 */
+  const idxBadge = document.getElementById('idxBadge'); // cite: 97
+  const record3d = document.getElementById('record3d');
+  const halfClip = document.getElementById('halfClip');
+  const vinyl = document.getElementById('vinyl'); /* cite: 111 */
+  const labelBtn = document.getElementById('labelBtn');
+  const labelFlip = document.getElementById('labelFlip');
+  const playBtn = document.getElementById('playBtn'); /* cite: 112 */
+  const recordShadow = document.getElementById('recordShadow');
+  const lyricsBtn = document.getElementById('lyricsBtn');
+  // ⭐ 플레이어 박스 및 가사 컨테이너/내용 참조 추가
+  const playerBox = document.getElementById('playerBox'); /* cite: 113 */
+  const lyricsContainer = document.getElementById('lyricsContainer'); /* cite: 113 */
+  const lyricsContent = document.getElementById('lyricsContent'); /* cite: 113 */
+
+
+  /* ------------------------------
+    상태 변수
+  ------------------------------ */
+  let currentPart = 1;
+  let currentIndex = 0; /* cite: 114 */
+  let visualAngle = 0;
+  let dragAccum = 0;
+  let lastAngle = null;
+  let isPointerDown = false; /* cite: 115 */
+  let pointerId = null;
+  let lastTime = 0;
+  let velocity = 0;
+  let tiltX = 0, tiltY = 0; /* cite: 116 */
+  let isFlipping = false;
+  let isLyricsVisible = false; /* cite: 117 */
+
+  /* ------------------------------
+    오디오 객체
+  ------------------------------ */
+  let audio = new Audio();
+  audio.loop = false;
+  audio.volume = 0.8; /* cite: 118 */
+
+  /* ------------------------------
+    트랙 UI 업데이트 + 오디오 src 적용
+  ------------------------------ */
+  function updateTrackUI(){
+    const track = PARTS[currentPart][currentIndex];
+    titleEl.textContent = track.title; /* cite: 119 */
+    artistEl.textContent = track.artist; /* cite: 119 */
+    idxBadge.textContent = `${currentIndex + 1} / ${PARTS[currentPart].length}`;
+    record3d.classList.toggle('part1', currentPart === 1); /* cite: 120 */
+    record3d.classList.toggle('part2', currentPart === 2); /* cite: 121 */
+    labelBtn.style.background = currentPart === 1
+      ? getComputedStyle(document.documentElement).getPropertyValue('--accent1')
+      : getComputedStyle(document.documentElement).getPropertyValue('--accent2'); /* cite: 122 */
+    labelBtn.setAttribute('aria-pressed', currentPart === 2 ? 'true' : 'false');
+    labelFlip.style.transform = currentPart === 1 ?
+    'rotateY(0deg)' : 'rotateY(180deg)'; /* cite: 123 */
+    
+    // ⭐ 가사 내용 업데이트
+    lyricsContent.textContent = track.lyrics ||
+    "가사 정보가 없습니다."; /* cite: 124 */
+    lyricsContainer.scrollTop = 0; // 새 트랙으로 바뀔 때 스크롤을 맨 위로 초기화
+
+    // 🔊 현재 트랙 오디오 적용
+    audio.src = track.audioSrc;
+    if(playing) audio.play(); /* cite: 125 */
+  }
+
+  /* ------------------------------
+    플레이 버튼 토글
+  ------------------------------ */
+  let playing = false;
+  playBtn.addEventListener('click', ()=>{ /* cite: 126 */
+    playing = !playing;
+    if(playing){
+      audio.play();
+      playBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6zm8-14v14h4V5h-4z"/></svg>';
+    } else {
+      audio.pause();
+      playBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+    }
+  }); /* cite: 127 */
+
+  /* ------------------------------
+    다음/이전 트랙
+  ------------------------------ */
+  function nextTrack(){ currentIndex = (currentIndex + 1) % PARTS[currentPart].length; flashPlayer(); updateTrackUI(); /* cite: 128 */
+  }
+  function prevTrack(){ currentIndex = (currentIndex - 1 + PARTS[currentPart].length) % PARTS[currentPart].length; flashPlayer(); updateTrackUI(); /* cite: 129 */ }
+  function flashPlayer(){
+    const p = document.getElementById('playerBox');
+    p.animate([{ transform:'scale(1)' },{ transform:'scale(0.96)' },{ transform:'scale(1)' }], { duration:260, easing:'cubic-bezier(.2,.9,.2,1)' }); /* cite: 130 */
+  }
+
+  /* ------------------------------
+    레이블 탭 -> 파트 전환
+  ------------------------------ */
+  labelBtn.addEventListener('click', (ev)=>{
+    if(isFlipping) return;
+    isFlipping = true;
+    const spinDeg = 720;
+    const duration = 560;
+    const prevTransform = record3d.style.transform || '';
+    const nextPart = currentPart === 1 ? 2 : 1;
+
+    const recordAnim = record3d.animate(
+      [{ transform: prevTransform + ` rotate(${visualAngle}deg)` },
+      { transform: prevTransform + ` rotate(${visualAngle + spinDeg}deg)` }],
+      { duration, easing: 'cubic-bezier(.2,.9,.2,1)' }
+    );
+
+    vinyl.animate([{ transform: `rotate(0deg)` },{ transform: `rotate(${spinDeg}deg)` }], { duration, easing: 'cubic-bezier(.2,.9,.2,1)' });
+
+    
+    setTimeout(()=>{ labelFlip.style.transform 
+    = nextPart === 2 ? 'rotateY(180deg)' : 'rotateY(0deg)'; }, duration/2 - 80); /* cite: 131 */
+
+    setTimeout(()=>{ currentPart = nextPart; currentIndex = 0; updateTrackUI(); }, duration/2);
+
+    recordAnim.onfinish = () => { vinyl.style.transform = 'none';
+    record3d.style.transform = 'none'; visualAngle = 0; dragAccum = 0; velocity = 0; applyTransforms(); isFlipping = false; }; /* cite: 132 */
+  }); /* cite: 133 */
+
+  /* ------------------------------
+    드래그 회전 및 틱틱 트랙 전환
+  ------------------------------ */
+  function pointToAngle(pageX, pageY){
+    const rect = halfClip.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2; /* cite: 134 */
+    const cy = rect.top + rect.height;
+    const dx = pageX - cx; /* cite: 135 */
+    const dy = pageY - cy;
+    return Math.atan2(dy, dx) * 180 / Math.PI; /* cite: 136 */
+  }
+  function normalizeAngle(a){ while(a>180) a-=360; while(a<-180) a+=360;
+    return a; /* cite: 137 */
+  }
+
+  function onPointerDown(e){
+    isPointerDown = true; pointerId = e.pointerId;
+    halfClip.setPointerCapture && halfClip.setPointerCapture(pointerId);
+    lastAngle = pointToAngle(e.pageX, e.pageY); /* cite: 138 */
+    lastTime = performance.now();
+    velocity = 0; dragAccum = 0;
+    updateTiltFromPointer(e.pageX, e.pageY);
+    e.preventDefault(); /* cite: 139 */
+  }
+
+  function onPointerMove(e){
+    if(!isPointerDown || (pointerId != null && e.pointerId !== pointerId)) return;
+    const now = performance.now(); /* cite: 140 */
+    const curAngle = pointToAngle(e.pageX, e.pageY);
+    let delta = normalizeAngle(curAngle - lastAngle);
+    const dt = Math.max(1, now - lastTime); /* cite: 141 */
+    const instantVel = delta / dt;
+    velocity = velocity * 0.6 + instantVel * 0.4; /* cite: 142 */
+    lastAngle = curAngle;
+    lastTime = now; /* cite: 143 */
+    dragAccum += delta; 
+    visualAngle += delta;
+    applyTransforms();
+
+    // ✅ 틱틱 트랙 전환
+    const TICK_ANGLE = 30; /* cite: 144 */
+    while(dragAccum >= TICK_ANGLE){ nextTrack(); dragAccum -= TICK_ANGLE; flashPlayer(); }
+    while(dragAccum <= -TICK_ANGLE){ prevTrack();
+    dragAccum += TICK_ANGLE; flashPlayer(); /* cite: 145 */
+    }
+
+    updateTiltFromPointer(e.pageX, e.pageY);
+    e.preventDefault(); /* cite: 146 */
+  }
+
+  function onPointerUp(e){
+    if(pointerId != null && e.pointerId !== pointerId) return;
+    isPointerDown = false; /* cite: 147 */
+    try{ halfClip.releasePointerCapture && halfClip.releasePointerCapture(pointerId); }catch(_){}
+    pointerId = null;
+    lastAngle = null;
+    if(Math.abs(velocity) > 0.02) startInertia(velocity);
+    else resetRotationVisual(); /* cite: 148 */
+  }
+
+  function applyTransforms(){
+    const tX = Math.max(-12, Math.min(12, tiltX));
+    const tY = Math.max(-20, Math.min(20, tiltY));
+    record3d.style.transform = `rotateX(${tX}deg) rotateY(${tY}deg) rotate(${visualAngle}deg)`; /* cite: 149 */
+    const shadowOffsetX = (tY / 20) * 12;
+    const scale = 1 - Math.abs(tX)/80; /* cite: 150 */
+    recordShadow.style.transform = `translateX(${shadowOffsetX}px) scaleX(${scale})`; /* cite: 150 */
+  }
+
+  function updateTiltFromPointer(pageX, pageY){
+    const rect = halfClip.getBoundingClientRect();
+    const cx = rect.left + rect.width/2; /* cite: 151 */
+    const cy = rect.top + rect.height/2; /* cite: 152 */
+    tiltY = ((pageX - cx) / rect.width) * 28;
+    tiltX = -((pageY - cy) / rect.height) * 18; /* cite: 153 */
+  }
+
+  function resetRotationVisual(duration = 360){
+    const start = visualAngle;
+    const startTime = performance.now(); /* cite: 154 */
+    function frame(t){
+      const p = Math.min(1, (t - startTime) / duration); /* cite: 155 */
+      const ease = 1 - Math.pow(1 - p, 3);
+      visualAngle = start * (1 - ease); /* cite: 156 */
+      tiltX *= 0.92;
+      tiltY *= 0.92; /* cite: 157 */
+      applyTransforms();
+      if(p<1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  /* ------------------------------
+    관성 회전
+  ------------------------------ */
+  function startInertia(initVel){
+    let v = initVel; /* cite: 158 */
+    function frame(){
+      if(Math.abs(v)<0.002) return;
+      visualAngle += v*16; applyTransforms();
+      const TICK_ANGLE = 30;
+      dragAccum += v*16; /* cite: 159 */
+      while(dragAccum >= TICK_ANGLE){ nextTrack(); dragAccum -= TICK_ANGLE; flashPlayer(); /* cite: 160 */ }
+      while(dragAccum <= -TICK_ANGLE){ prevTrack(); dragAccum += TICK_ANGLE; flashPlayer(); /* cite: 161 */
+      }
+
+      v *= 0.92;
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame); /* cite: 162 */
+  }
+
+  /* ------------------------------
+    이벤트 등록
+  ------------------------------ */
+  halfClip.addEventListener('pointerdown', onPointerDown); /* cite: 162 */
+  halfClip.addEventListener('pointermove', onPointerMove);
+  halfClip.addEventListener('pointerup', onPointerUp);
+  halfClip.addEventListener('pointercancel', onPointerUp);
+  halfClip.addEventListener('pointerleave', onPointerUp); /* cite: 163 */
+
+  // ⭐ "가사 보기" 버튼 이벤트 (UI 변경 로직)
+  lyricsBtn.addEventListener('click', ()=>{
+    isLyricsVisible = !isLyricsVisible;
+    
+    // 플레이어 박스의 높이를 동적으로 조정하여 가사 영역을 보이거나 숨김
+    playerBox.classList.toggle('show-lyrics', isLyricsVisible);
+    
+    // 버튼 스타일 변경
+    lyricsBtn.classList.toggle('active', isLyricsVisible);
+    
+    // 접근성을 위한 aria 속성 변경
+    lyricsContainer.setAttribute('aria-hidden', !isLyricsVisible);
+
+    // 가사 보기를 켤 때 스크롤을 맨 위로 이동
+    if (isLyricsVisible) {
+        lyricsContainer.scrollTop = 0;
+    }
+  }); /* cite: 164 */
+
+
+  /* ------------------------------
+    초기 트랙 설정
+  ------------------------------ */
+  updateTrackUI();
+
+
+
+  const progressBar = document.getElementById('progressBar');
+const currentTimeEl = document.getElementById('currentTime');
+const durationEl = document.getElementById('duration');
+
+// 시간 포맷 함수
+function formatTime(seconds) {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+}
+
+// 전체 길이 표시
+audio.addEventListener('loadedmetadata', () => {
+  durationEl.textContent = formatTime(audio.duration);
+});
+
+// 진행 상황 업데이트
+audio.addEventListener('timeupdate', () => {
+  const percent = (audio.currentTime / audio.duration) * 100;
+  progressBar.value = percent || 0;
+  currentTimeEl.textContent = formatTime(audio.currentTime);
+});
+
+// 사용자가 바를 움직이면 오디오 위치 변경
+progressBar.addEventListener('input', () => {
+  const seekTime = (progressBar.value / 100) * audio.duration;
+  audio.currentTime = seekTime;
+});
+  </script>
+  </body>
+  </html>
