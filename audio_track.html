@@ -585,39 +585,41 @@
   }
 
   function onPointerMove(e){
-    if(!isPointerDown || (pointerId != null && e.pointerId !== pointerId)) return;
-    const now = performance.now(); /* cite: 140 */
-    const curAngle = pointToAngle(e.pageX, e.pageY);
-    let delta = normalizeAngle(curAngle - lastAngle);
-    const dt = Math.max(1, now - lastTime); /* cite: 141 */
-    const instantVel = delta / dt;
-    velocity = velocity * 0.6 + instantVel * 0.4; /* cite: 142 */
-    lastAngle = curAngle;
-    lastTime = now; /* cite: 143 */
-    dragAccum += delta; 
-    visualAngle += delta;
-    applyTransforms();
+  if(!isPointerDown || (pointerId != null && e.pointerId !== pointerId)) return;
+  const now = performance.now();
+  const curAngle = pointToAngle(e.pageX, e.pageY);
+  let delta = normalizeAngle(curAngle - lastAngle);
+  const dt = Math.max(1, now - lastTime);
+  const instantVel = delta / dt;
+  velocity = velocity * 0.6 + instantVel * 0.4;
+  lastAngle = curAngle;
+  lastTime = now;
+  dragAccum += delta; 
+  visualAngle += delta;
+  applyTransforms();
 
-    // ✅ 틱틱 트랙 전환
-    const TICK_ANGLE = 30; /* cite: 144 */
-    while(dragAccum >= TICK_ANGLE){ nextTrack(); dragAccum -= TICK_ANGLE; flashPlayer(); }
-    while(dragAccum <= -TICK_ANGLE){ prevTrack();
-    dragAccum += TICK_ANGLE; flashPlayer(); /* cite: 145 */
-    }
-
-    updateTiltFromPointer(e.pageX, e.pageY);
-    e.preventDefault(); /* cite: 146 */
-  }
+  updateTiltFromPointer(e.pageX, e.pageY);
+  e.preventDefault();
+}
 
   function onPointerUp(e){
-    if(pointerId != null && e.pointerId !== pointerId) return;
-    isPointerDown = false; /* cite: 147 */
-    try{ halfClip.releasePointerCapture && halfClip.releasePointerCapture(pointerId); }catch(_){}
-    pointerId = null;
-    lastAngle = null;
-    if(Math.abs(velocity) > 0.02) startInertia(velocity);
-    else resetRotationVisual(); /* cite: 148 */
+  if(pointerId != null && e.pointerId !== pointerId) return;
+  isPointerDown = false;
+  try{ halfClip.releasePointerCapture && halfClip.releasePointerCapture(pointerId); }catch(_){}
+  pointerId = null;
+  lastAngle = null;
+
+  const TICK_ANGLE = 30;
+  if (dragAccum >= TICK_ANGLE) {
+    nextTrack();
+  } else if (dragAccum <= -TICK_ANGLE) {
+    prevTrack();
   }
+  dragAccum = 0; // 초기화
+
+  if(Math.abs(velocity) > 0.02) startInertia(velocity);
+  else resetRotationVisual();
+}
 
   function applyTransforms(){
     const tX = Math.max(-12, Math.min(12, tiltX));
@@ -655,21 +657,16 @@
     관성 회전
   ------------------------------ */
   function startInertia(initVel){
-    let v = initVel; /* cite: 158 */
-    function frame(){
-      if(Math.abs(v)<0.002) return;
-      visualAngle += v*16; applyTransforms();
-      const TICK_ANGLE = 30;
-      dragAccum += v*16; /* cite: 159 */
-      while(dragAccum >= TICK_ANGLE){ nextTrack(); dragAccum -= TICK_ANGLE; flashPlayer(); /* cite: 160 */ }
-      while(dragAccum <= -TICK_ANGLE){ prevTrack(); dragAccum += TICK_ANGLE; flashPlayer(); /* cite: 161 */
-      }
-
-      v *= 0.12;
-      requestAnimationFrame(frame);
-    }
-    requestAnimationFrame(frame); /* cite: 162 */
+  let v = initVel;
+  function frame(){
+    if(Math.abs(v) < 0.002) return;
+    visualAngle += v * 3; // 회전 속도 조절
+    applyTransforms();
+    v *= 0.92; // 감쇠
+    requestAnimationFrame(frame);
   }
+  requestAnimationFrame(frame);
+}
 
   /* ------------------------------
     이벤트 등록
